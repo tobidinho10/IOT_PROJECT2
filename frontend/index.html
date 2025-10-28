@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width,initial-scale=1" />
+		<title>Minimal E‑Commerce — Frontend</title>
+		<link rel="stylesheet" href="styles.css" />
+	</head>
+	<body>
+		<header class="site-header">
+			<h1>Minimal E‑Commerce</h1>
+			<button id="view-cart" class="cart-btn">Cart (<span id="cart-count">0</span>)</button>
+		</header>
+
+		<main>
+			<section id="products" class="products-grid" aria-label="Products">
+				<!-- Products will be rendered here by app.js -->
+			</section>
+		</main>
+
+		<!-- Cart drawer -->
+		<aside id="cart-drawer" class="cart-drawer" aria-hidden="true">
+			<div class="cart-header">
+				<h2>Your cart</h2>
+				<button id="close-cart">✕</button>
+			</div>
+			<ul id="cart-items" class="cart-items"></ul>
+			<div class="cart-footer">
+				<div class="total">Total: $<span id="cart-total">0.00</span></div>
+				<button id="checkout" class="primary">Checkout</button>
+			</div>
+		</aside>
+
+		<div id="toast" class="toast" aria-live="polite"></div>
+
+		<script src="app.js" type="module"></script>
+	</body>
+</html>

@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Cart Unit Tests</title>
+    <link rel="stylesheet" href="https://unpkg.com/mocha/mocha.css" />
+  </head>
+  <body>
+    <div id="mocha"></div>
+    <script src="https://unpkg.com/mocha/mocha.js"></script>
+    <script src="https://unpkg.com/chai/chai.js"></script>
+    <script>mocha.setup('bdd'); const { assert } = chai;</script>
+
+    <script type="module">
+      import { Cart } from './cart.js';
+
+      const seed = [
+        { id: 't1', name: 'Test A', price: 10 },
+        { id: 't2', name: 'Test B', price: 5 },
+      ];
+
+      describe('Cart module', () => {
+        beforeEach(() => {
+          localStorage.removeItem('iot_ecom_cart_v1');
+          Cart.init(seed);
+        });
+
+        it('starts empty', () => {
+          assert.equal(Cart.getCount(), 0);
+          assert.equal(Cart.getTotal(), 0);
+          assert.deepEqual(Cart.getItems(), []);
+        });
+
+        it('adds items and reports count/total', () => {
+          Cart.add('t1');
+          assert.equal(Cart.getCount(), 1);
+          assert.equal(Cart.getTotal(), 10);
+          Cart.add('t2', 2);
+          assert.equal(Cart.getCount(), 3);
+          assert.equal(Cart.getTotal(), 20);
+        });
+
+        it('changes quantity and removes when zero', () => {
+          Cart.add('t1', 2);
+          assert.equal(Cart.getCount(), 2);
+          Cart.changeQty('t1', -1);
+          assert.equal(Cart.getCount(), 1);
+          Cart.changeQty('t1', -1);
+          assert.equal(Cart.getCount(), 0);
+        });
+
+        it('persists to localStorage', () => {
+          Cart.add('t2', 3);
+          // create a fresh cart and init to cause load
+          const snapshot = localStorage.getItem('iot_ecom_cart_v1');
+          assert.isString(snapshot);
+          const parsed = JSON.parse(snapshot);
+          assert.isArray(parsed);
+          // parsed should include an entry for t2
+          const keys = parsed.map(([k]) => k);
+          assert.include(keys, 't2');
+        });
+
+        it('clears properly', () => {
+          Cart.add('t1', 1);
+          Cart.clear();
+          assert.equal(Cart.getCount(), 0);
+        });
+      });
+
+      mocha.run();
+    </script>
+  </body>
+</html>
