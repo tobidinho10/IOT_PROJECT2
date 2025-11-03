@@ -12,7 +12,7 @@ Features
   - File-based JSON database for simplicity
   - Supports CORS for frontend integration
 
-  *** How to run
+  How to run
   - cd ecommerce-backend
   - npm start
 
