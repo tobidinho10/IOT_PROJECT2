@@ -12,6 +12,11 @@ Features
   - File-based JSON database for simplicity
   - Supports CORS for frontend integration
 
+  *** How to run
+  - cd ecommerce-backend
+  - npm start
+
+
 - **Frontend ( JS)**
   - Dynamic product listing fetched from API
   - Add-to-cart functionality with real-time cart updates
