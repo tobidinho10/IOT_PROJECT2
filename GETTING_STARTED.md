@@ -1,6 +1,36 @@
-# Getting Started Guide
+# Getting Started: Minimal E‑Commerce Project
 
-This is a minimal full-stack e-commerce starter with a vanilla JS frontend and Express/LowDB backend. Here's how to get up and running.
+## Prerequisites
+- Install Node.js from https://nodejs.org/
+
+## Setup Steps
+
+1. **Install Backend Dependencies**
+   Open PowerShell and run:
+   ```powershell
+   cd ecommerce-backend
+   npm install
+   ```
+
+2. **Start the Backend Server**
+   In the same PowerShell window, run:
+   ```powershell
+   npm start
+   ```
+   The server will start at http://localhost:5000
+
+3. **Access the App**
+   Open your browser and go to:
+   ```
+   http://localhost:5000
+   ```
+   You’ll see the shop UI. You can register, log in, add products to your cart, and checkout.
+
+---
+- All frontend files are served automatically by the backend.
+- Data is stored in `ecommerce-backend/db.json`.
+- No extra build steps are needed.
+- For more help, see README.md.
 
 ## Quick Start
 
