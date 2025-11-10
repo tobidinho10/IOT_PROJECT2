@@ -1,26 +1,43 @@
-# 🛍️ E-Commerce Website (Full-Stack Starter)
+# Minimal E‑Commerce Starter
 
-A simple full-stack e-commerce website built with Node.js (Express) for the backend and **HTML, CSS, JavaScript** for the frontend.  
-This project demonstrates the core functionality of an online store — product listings, a shopping cart, and mock checkout — in a minimal, easy-to-understand setup.
+## Running Locally
 
+### Backend
+1. Install dependencies:
+   ```sh
+   cd ecommerce-backend
+   npm install
+   ```
+2. Start the server:
+   ```sh
+   npm start
+   ```
+   - Server runs on [http://localhost:5000](http://localhost:5000)
+   - Data is stored in `ecommerce-backend/db.json`
 
+### Frontend
+Open `frontend/index.html` in your browser. No build step required.
 
-Features
+## API Endpoints
 
-- **Backend (Express + LowDB)**
-  - RESTful API for products and orders
-  - File-based JSON database for simplicity
-  - Supports CORS for frontend integration
+### Auth
+- `POST /api/auth/register` — `{ username, password }`
+- `POST /api/auth/login` — `{ username, password }` → `{ token }`
 
-  *** How to run
-  - cd ecommerce-backend
-  - npm start
+### Products
+- `GET /api/products` — Returns array of products
 
+### Orders
+- `POST /api/orders` — `{ items: [{ productId, qty }], ... }` (Requires JWT)
+- `GET /api/orders` — Returns user's orders (Requires JWT)
 
-- **Frontend ( JS)**
-  - Dynamic product listing fetched from API
-  - Add-to-cart functionality with real-time cart updates
-  - Mock checkout (creates an order in backend)
+## Features
+- Register/login to place orders
+- Add/remove products to cart
+- Checkout with authentication
+
+---
+For more details, see code comments and `docs/api.md` (if present).
 
 
 

@@ -17,6 +17,9 @@ const db = new Low(adapter, { users: [], products: [], orders: [] });
 app.use(cors());
 app.use(express.json());
 
+// Serve static frontend files
+app.use(express.static(path.join(__dirname, '../frontend')));
+
 // Initialize DB before handling routes
 app.use(async (req, res, next) => {
   await db.read();

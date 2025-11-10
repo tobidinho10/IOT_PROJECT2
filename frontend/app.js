@@ -137,23 +137,34 @@ function closeCart() {
 }
 
 // --- AUTH UI ---
-function renderAuth() {
+function renderAuth(showLogin = true) {
   const main = document.querySelector('main');
   main.innerHTML = `
     <section class="auth-section">
-      <h2>Login or Register</h2>
-      <form id="login-form">
+      <h2>${showLogin ? 'Login' : 'Register'}</h2>
+      <form id="login-form" style="display:${showLogin ? 'flex' : 'none'};">
         <input name="username" placeholder="Username" required />
         <input name="password" type="password" placeholder="Password" required />
         <button type="submit">Login</button>
       </form>
-      <form id="register-form">
+      <form id="register-form" style="display:${showLogin ? 'none' : 'flex'};">
         <input name="username" placeholder="Username" required />
         <input name="password" type="password" placeholder="Password" required />
         <button type="submit">Register</button>
       </form>
+      <div style="text-align:center;margin-top:0.7rem;">
+        <button id="toggle-auth" type="button" style="background:none;border:none;color:var(--accent-2);cursor:pointer;text-decoration:underline;">${showLogin ? 'Need an account? Register' : 'Already have an account? Login'}</button>
+      </div>
     </section>
   `;
+  // Attach toggle handler immediately after rendering
+  const toggleBtn = document.getElementById('toggle-auth');
+  if (toggleBtn) {
+    toggleBtn.onclick = () => {
+      renderAuth(!showLogin);
+      attachAuthHandlers();
+    };
+  }
 }
 
 function getToken() {
@@ -166,6 +177,27 @@ function clearToken() {
   localStorage.removeItem('jwt_token');
 }
 
+// --- LOGOUT BUTTON ---
+function renderLogout() {
+  const header = document.querySelector('.site-header');
+  if (!header.querySelector('#logout-btn')) {
+    const btn = document.createElement('button');
+    btn.id = 'logout-btn';
+    btn.textContent = 'Logout';
+    btn.className = 'cart-btn';
+    btn.style.marginLeft = '1rem';
+    header.appendChild(btn);
+  }
+}
+
+document.addEventListener('click', (e) => {
+  const logoutBtn = e.target.closest('#logout-btn');
+  if (logoutBtn) {
+    clearToken();
+    location.reload();
+  }
+});
+
 async function login(username, password) {
   try {
     const res = await fetch('/api/auth/login', {
@@ -177,6 +209,7 @@ async function login(username, password) {
     if (res.ok && data.token) {
       setToken(data.token);
       showToast('Login successful');
+      renderLogout();
       return true;
     } else {
       showToast(data.message || 'Login failed');
@@ -207,6 +240,20 @@ async function register(username, password) {
     showToast('Registration error');
     return false;
   }
+}
+
+// --- IMPROVE AUTH UI FEEDBACK ---
+function showAuthError(msg) {
+  const main = document.querySelector('main');
+  let err = main.querySelector('.auth-error');
+  if (!err) {
+    err = document.createElement('div');
+    err.className = 'auth-error';
+    err.style.color = 'red';
+    err.style.margin = '0.5rem 0';
+    main.querySelector('.auth-section').appendChild(err);
+  }
+  err.textContent = msg;
 }
 
 function attachAuthHandlers() {
@@ -258,19 +305,65 @@ async function checkout() {
   }
 }
 
-// --- INIT MODIFICATION ---
+// --- IMPROVE INIT ---
 async function init() {
   if (!getToken()) {
-    renderAuth();
+    renderAuth(true);
     attachAuthHandlers();
     return;
   }
+  renderLogout();
   await fetchProducts();
   renderProducts();
   Cart.init(products);
   Cart.subscribe(renderCart);
   renderCart();
   attachEventHandlers();
+}
+
+function attachEventHandlers() {
+  document.addEventListener('click', (e) => {
+    const add = e.target.closest('button.add');
+    if (add) {
+      Cart.add(add.dataset.id);
+      renderCart(); // Ensure cart updates visually
+      showToast('Added to cart');
+      return;
+    }
+    const viewCart = e.target.closest('#view-cart');
+    if (viewCart) {
+      openCart();
+      return;
+    }
+    const close = e.target.closest('#close-cart');
+    if (close) {
+      closeCart();
+      return;
+    }
+    const inc = e.target.closest('button.inc');
+    if (inc) {
+      Cart.changeQty(inc.dataset.id, +1);
+      renderCart();
+      return;
+    }
+    const dec = e.target.closest('button.dec');
+    if (dec) {
+      Cart.changeQty(dec.dataset.id, -1);
+      renderCart();
+      return;
+    }
+    const rem = e.target.closest('button.rem');
+    if (rem) {
+      Cart.remove(rem.dataset.id);
+      renderCart();
+      return;
+    }
+    const checkoutBtn = e.target.closest('#checkout');
+    if (checkoutBtn) {
+      checkout();
+      return;
+    }
+  });
 }
 
 init();
