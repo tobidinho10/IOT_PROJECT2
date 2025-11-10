@@ -4,8 +4,8 @@
 
 import { Cart } from './cart.js';
 
-const PRODUCTS_ENDPOINT = '/products';
-const ORDERS_ENDPOINT = '/orders';
+const PRODUCTS_ENDPOINT = '/api/products';
+const ORDERS_ENDPOINT = '/api/orders';
 
 const seedProducts = [
   { 
@@ -136,57 +136,135 @@ function closeCart() {
   drawer.classList.remove('open');
 }
 
+// --- AUTH UI ---
+function renderAuth() {
+  const main = document.querySelector('main');
+  main.innerHTML = `
+    <section class="auth-section">
+      <h2>Login or Register</h2>
+      <form id="login-form">
+        <input name="username" placeholder="Username" required />
+        <input name="password" type="password" placeholder="Password" required />
+        <button type="submit">Login</button>
+      </form>
+      <form id="register-form">
+        <input name="username" placeholder="Username" required />
+        <input name="password" type="password" placeholder="Password" required />
+        <button type="submit">Register</button>
+      </form>
+    </section>
+  `;
+}
+
+function getToken() {
+  return localStorage.getItem('jwt_token') || '';
+}
+function setToken(token) {
+  localStorage.setItem('jwt_token', token);
+}
+function clearToken() {
+  localStorage.removeItem('jwt_token');
+}
+
+async function login(username, password) {
+  try {
+    const res = await fetch('/api/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, password })
+    });
+    const data = await res.json();
+    if (res.ok && data.token) {
+      setToken(data.token);
+      showToast('Login successful');
+      return true;
+    } else {
+      showToast(data.message || 'Login failed');
+      return false;
+    }
+  } catch (err) {
+    showToast('Login error');
+    return false;
+  }
+}
+
+async function register(username, password) {
+  try {
+    const res = await fetch('/api/auth/register', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, password })
+    });
+    const data = await res.json();
+    if (res.ok) {
+      showToast('Registration successful');
+      return true;
+    } else {
+      showToast(data.message || 'Registration failed');
+      return false;
+    }
+  } catch (err) {
+    showToast('Registration error');
+    return false;
+  }
+}
+
+function attachAuthHandlers() {
+  document.addEventListener('submit', async (e) => {
+    if (e.target.id === 'login-form') {
+      e.preventDefault();
+      const username = e.target.username.value;
+      const password = e.target.password.value;
+      const ok = await login(username, password);
+      if (ok) location.reload();
+    }
+    if (e.target.id === 'register-form') {
+      e.preventDefault();
+      const username = e.target.username.value;
+      const password = e.target.password.value;
+      const ok = await register(username, password);
+      if (ok) showToast('You can now log in');
+    }
+  });
+}
+
+// --- MODIFIED CHECKOUT ---
 async function checkout() {
   if (Cart.getCount() === 0) { showToast('Cart is empty'); return; }
+  const token = getToken();
+  if (!token) { showToast('Please login to place an order'); renderAuth(); attachAuthHandlers(); return; }
   const order = {
     items: Cart.getItems().map(it => ({ productId: it.product.id, qty: it.qty })),
     total: Cart.getTotal(),
     createdAt: new Date().toISOString(),
   };
   try {
-    const res = await fetch(ORDERS_ENDPOINT, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(order) });
-    if (!res.ok) throw new Error('Order failed');
+    const res = await fetch(ORDERS_ENDPOINT, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify(order)
+    });
     const data = await res.json();
+    if (!res.ok) throw new Error(data.message || 'Order failed');
     Cart.clear();
     renderCart();
     closeCart();
     showToast(data && data.id ? `Order ${data.id} created` : 'Order created');
   } catch (err) {
-    console.warn('Order POST failed, showing mock success', err);
-    // Mock success
-    Cart.clear();
-    renderCart();
-    closeCart();
-    showToast('Mock order created (no backend)');
+    showToast('Order failed: ' + (err.message || 'Unknown error'));
   }
 }
 
-function attachEventHandlers() {
-  document.addEventListener('click', (e) => {
-    const add = e.target.closest('button.add');
-    if (add) { Cart.add(add.dataset.id); return; }
-
-    const viewCart = e.target.closest('#view-cart');
-    if (viewCart) { openCart(); return; }
-
-    const close = e.target.closest('#close-cart');
-    if (close) { closeCart(); return; }
-
-    const inc = e.target.closest('button.inc');
-    if (inc) { Cart.changeQty(inc.dataset.id, +1); return; }
-
-    const dec = e.target.closest('button.dec');
-    if (dec) { Cart.changeQty(dec.dataset.id, -1); return; }
-
-    const rem = e.target.closest('button.rem');
-    if (rem) { Cart.remove(rem.dataset.id); return; }
-
-    const checkoutBtn = e.target.closest('#checkout');
-    if (checkoutBtn) { checkout(); return; }
-  });
-}
-
+// --- INIT MODIFICATION ---
 async function init() {
+  if (!getToken()) {
+    renderAuth();
+    attachAuthHandlers();
+    return;
+  }
   await fetchProducts();
   renderProducts();
   Cart.init(products);
